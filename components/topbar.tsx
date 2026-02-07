@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { LucideLogIn, LucideLogOut, LucidePlus, LucideUserPlus } from "@nattui/icons"
+import { LucideLogIn, LucideLogOut, LucidePlus, LucideUser, LucideUserPlus } from "@nattui/icons"
 import { Button } from "@nattui/react-components"
 import { Logomark } from "@/components/logomark"
 import { Logotype } from "@/components/logotype"
@@ -34,7 +34,14 @@ export function Topbar() {
             </Button>
             {session ? (
               <>
-                <span className="text-gray-11 text-14">{session.user.name}</span>
+                <Button
+                  iconStart={<LucideUser size={16} />}
+                  onClick={() => router.push("/profile")}
+                  size={36}
+                  variant="ghost"
+                >
+                  {session.user.name}
+                </Button>
                 <Button
                   iconStart={<LucideLogOut size={16} />}
                   onClick={async () => {

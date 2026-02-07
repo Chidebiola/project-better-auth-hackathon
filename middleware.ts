@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getSessionCookie } from "better-auth/cookies"
 
 const authPages = ["/signin", "/signup"]
-const protectedPages = ["/create"]
+const protectedPages = ["/create", "/profile"]
 
 export function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request)
@@ -22,5 +22,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/signin", "/signup", "/create"],
+  matcher: ["/signin", "/signup", "/create", "/profile"],
 }
