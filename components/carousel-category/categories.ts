@@ -4,75 +4,71 @@ export const categories = [
     value: "all",
   },
   {
-    label: "Gaming",
-    value: "gaming",
+    label: "Programming",
+    value: "programming",
+  },
+  {
+    label: "Design",
+    value: "design",
+  },
+  {
+    label: "Marketing",
+    value: "marketing",
+  },
+  {
+    label: "Finance",
+    value: "finance",
+  },
+  {
+    label: "Legal",
+    value: "legal",
+  },
+  {
+    label: "Career",
+    value: "career",
+  },
+  {
+    label: "Health",
+    value: "health",
+  },
+  {
+    label: "Relationships",
+    value: "relationships",
+  },
+  {
+    label: "Travel",
+    value: "travel",
+  },
+  {
+    label: "Cooking",
+    value: "cooking",
+  },
+  {
+    label: "Fitness",
+    value: "fitness",
   },
   {
     label: "Music",
     value: "music",
   },
   {
-    label: "Podcasts",
-    value: "podcasts",
+    label: "Photography",
+    value: "photography",
   },
   {
-    label: "Computer programming",
-    value: "computer-programming",
+    label: "Gaming",
+    value: "gaming",
   },
   {
-    label: "Computer hardware",
-    value: "computer-hardware",
+    label: "Science",
+    value: "science",
   },
   {
-    label: "Smooth jazz",
-    value: "smooth-jazz",
+    label: "Education",
+    value: "education",
   },
   {
-    label: "Gaming consoles",
-    value: "gaming-consoles",
-  },
-  {
-    label: "APIs",
-    value: "apis",
-  },
-  {
-    label: "AI",
-    value: "ai",
-  },
-  {
-    label: "Live",
-    value: "live",
-  },
-  {
-    label: "Minecraft",
-    value: "minecraft",
-  },
-  {
-    label: "Gadgets",
-    value: "gadgets",
-  },
-  {
-    label: "Chill-out music",
-    value: "chill-out-music",
-  },
-  {
-    label: "J-Pop",
-    value: "j-pop",
-  },
-  {
-    label: "Life simulation games",
-    value: "life-simulation-games",
-  },
-  {
-    label: "Recently uploaded",
-    value: "recently-uploaded",
-  },
-  {
-    label: "Watched",
-    value: "watched",
-  },
-  {
-    label: "New to you",
-    value: "new-to-you",
+    label: "Business",
+    value: "business",
   },
 ]
