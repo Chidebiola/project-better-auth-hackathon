@@ -15,7 +15,7 @@ export function Topbar() {
       <div className="flex size-full items-center justify-between">
         <Link
           className="-ml-8 flex items-center gap-x-8 p-8 transition-opacity hover:opacity-75"
-          href="/button"
+          href="/"
         >
           <Logomark className="text-primary-9" />
           <Logotype className="text-gray-12" />
