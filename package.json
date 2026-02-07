@@ -1,0 +1,37 @@
+{
+  "name": "web",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --port 3001",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.1.0",
+    "@nattui/icons": "npm:lucide-react@0.563.0",
+    "@nattui/react-components": "0.0.37",
+    "@nattui/tailwind-colors": "0.0.8",
+    "@nattui/tailwind-exact": "0.0.5",
+    "@use-gesture/react": "10.3.1",
+    "motion": "12.31.0",
+    "next": "16.1.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.1.18",
+    "@types/node": "25.2.0",
+    "@types/react": "19.2.10",
+    "@types/react-dom": "19.2.3",
+    "babel-plugin-react-compiler": "1.0.0",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.9.3"
+  },
+  "ignoreScripts": [
+    "sharp",
+    "unrs-resolver"
+  ],
+  "trustedDependencies": [
+    "sharp",
+    "unrs-resolver"
+  ]
+}

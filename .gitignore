@@ -1,0 +1,6 @@
+.next
+.turbo
+dist
+next-env.d.ts
+node_modules
+storybook-static
