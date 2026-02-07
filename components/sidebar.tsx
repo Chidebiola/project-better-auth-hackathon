@@ -2,34 +2,22 @@
 
 import Link, { type LinkProps } from "next/link"
 import { usePathname } from "next/navigation"
+import { LucideCompass, LucidePlus } from "@nattui/icons"
 
 const links: {
   href: LinkProps<string>["href"]
+  icon: typeof LucideCompass
   label: string
 }[] = [
   {
-    href: "/button",
-    label: "Button",
+    href: "/",
+    icon: LucideCompass,
+    label: "Discover",
   },
   {
-    href: "/input",
-    label: "Input",
-  },
-  {
-    href: "/textarea",
-    label: "Textarea",
-  },
-  {
-    href: "/switch",
-    label: "Switch",
-  },
-  {
-    href: "/experiment/carousel",
-    label: "Carousel",
-  },
-  {
-    href: "/theme",
-    label: "Theme",
+    href: "/create",
+    icon: LucidePlus,
+    label: "Ask question",
   },
 ]
 
@@ -41,14 +29,16 @@ export function Sidebar() {
       <div className="flex flex-col gap-y-4 overflow-y-auto px-24">
         {links.map((link, index) => {
           const isActive = pathname === link.href
+          const Icon = link.icon
 
           return (
             <Link
-              className="text-14 font-500 data-[is-active=true]:text-primary-9 hover:text-gray-12 w-fit transition-colors"
+              className="text-14 font-500 data-[is-active=true]:text-primary-9 hover:text-gray-12 flex w-fit items-center gap-x-8 transition-colors"
               data-is-active={isActive}
               href={link.href}
               key={index}
             >
+              <Icon size={16} />
               {link.label}
             </Link>
           )

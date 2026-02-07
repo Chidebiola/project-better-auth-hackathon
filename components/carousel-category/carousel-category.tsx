@@ -9,7 +9,12 @@ import { categories } from "@/components/carousel-category/categories"
 
 type CategoryValue = (typeof categories)[number]["value"]
 
-export function CarouselCategory() {
+type CarouselCategoryProps = {
+  onCategoryChange?: (category: string) => void
+}
+
+export function CarouselCategory(props: CarouselCategoryProps) {
+  const { onCategoryChange } = props
   const [carousel, setCarousel] = useState<HTMLDivElement | null>(null)
   const [scrollX, setScrollX] = useState(0)
   const [scrollXMax, setScrollXMax] = useState(0)
@@ -43,6 +48,7 @@ export function CarouselCategory() {
   function onValueChange(value: CategoryValue[]) {
     if (value.length > 0) {
       setSelectedCategory(value[0])
+      onCategoryChange?.(value[0])
     }
   }
 
