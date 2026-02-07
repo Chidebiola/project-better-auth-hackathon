@@ -1,6 +1,6 @@
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit"
+    "source.fixAll.biome": "always"
   },
   "editor.defaultFormatter": "biomejs.biome",
   "editor.formatOnSave": true,
@@ -24,5 +24,8 @@
     "titleBar.activeForeground": "#e7e7e7",
     "titleBar.inactiveBackground": "#dd053199",
     "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   }
 }
