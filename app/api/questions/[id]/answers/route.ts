@@ -34,6 +34,16 @@ export async function POST(
     return Response.json({ error: "Question is closed" }, { status: 400 })
   }
 
+  // Check if user has been selected to answer
+  const selectedRequests = await query<{ id: string }>(
+    "SELECT id FROM answer_requests WHERE question_id = $1 AND user_id = $2 AND status = 'selected'",
+    [id, session.user.id],
+  )
+
+  if (selectedRequests.length === 0) {
+    return Response.json({ error: "You must be selected by the question author to answer" }, { status: 403 })
+  }
+
   const answers = await query(
     `INSERT INTO answers (question_id, author_id, body)
      VALUES ($1, $2, $3)

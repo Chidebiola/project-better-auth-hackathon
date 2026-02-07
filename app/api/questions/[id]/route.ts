@@ -1,5 +1,5 @@
 import { query } from "@/lib/db"
-import type { Answer } from "@/lib/types"
+import type { Answer, AnswerRequest } from "@/lib/types"
 
 export async function GET(
   _request: Request,
@@ -33,5 +33,16 @@ export async function GET(
     [id],
   )
 
-  return Response.json({ ...questions[0], answers })
+  const answerRequests = await query<AnswerRequest>(
+    `SELECT
+      ar.*,
+      u.name as user_name
+    FROM answer_requests ar
+    LEFT JOIN "user" u ON ar.user_id = u.id
+    WHERE ar.question_id = $1
+    ORDER BY ar.created_at ASC`,
+    [id],
+  )
+
+  return Response.json({ ...questions[0], answers, answer_requests: answerRequests })
 }
