@@ -24,16 +24,16 @@ export function Topbar() {
         </Link>
         {!isPending && (
           <div className="flex items-center gap-x-8">
+            <Button
+              iconStart={<LucidePlus size={16} />}
+              onClick={() => router.push(session ? "/create" : "/signup")}
+              size={36}
+              variant="accent"
+            >
+              Ask question
+            </Button>
             {session ? (
               <>
-                <Button
-                  iconStart={<LucidePlus size={16} />}
-                  onClick={() => router.push("/create")}
-                  size={36}
-                  variant="accent"
-                >
-                  Ask question
-                </Button>
                 <span className="text-gray-11 text-14">{session.user.name}</span>
                 <Button
                   iconStart={<LucideLogOut size={16} />}
@@ -52,7 +52,7 @@ export function Topbar() {
                 <Button iconStart={<LucideLogIn size={16} />} onClick={() => router.push("/signin")} size={36} variant="ghost">
                   Sign in
                 </Button>
-                <Button iconStart={<LucideUserPlus size={16} />} onClick={() => router.push("/signup")} size={36} variant="accent">
+                <Button iconStart={<LucideUserPlus size={16} />} onClick={() => router.push("/signup")} size={36} variant="ghost">
                   Sign up
                 </Button>
               </>

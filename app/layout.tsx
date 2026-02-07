@@ -12,7 +12,7 @@ export default function RootLayout(props: PropsWithChildren) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} color-gray-slate color-primary-blue`}
+        className={`${geistSans.variable} ${geistMono.variable} color-gray-slate color-primary-teal`}
       >
         <Providers>
           <div className="flex size-full flex-col">
