@@ -1,7 +1,7 @@
 "use client"
 
 import { type FormEvent, useCallback, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import {
   LucideCheck,
   LucideLoader,
@@ -29,9 +29,10 @@ type ProfileData = {
   }
 }
 
-export default function ProfilePage() {
+export default function UserProfilePage() {
+  const params = useParams<{ userId: string }>()
   const router = useRouter()
-  const { data: session, isPending } = authClient.useSession()
+  const { data: session } = authClient.useSession()
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -41,10 +42,15 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
+  const isOwner = session?.user.id === params.userId
+
   const fetchProfile = useCallback(async () => {
     try {
-      const res = await fetch("/api/profile")
-      if (!res.ok) return
+      const res = await fetch(`/api/users/${params.userId}`)
+      if (!res.ok) {
+        setProfile(null)
+        return
+      }
       const data = await res.json()
       setProfile(data)
     } catch {
@@ -52,13 +58,11 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [params.userId])
 
   useEffect(() => {
-    if (!isPending && session) {
-      fetchProfile()
-    }
-  }, [isPending, session, fetchProfile])
+    fetchProfile()
+  }, [fetchProfile])
 
   async function handleSaveName(e: FormEvent) {
     e.preventDefault()
@@ -96,7 +100,7 @@ export default function ProfilePage() {
     setError("")
   }
 
-  if (isPending || loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-48">
         <LucideLoader className="text-gray-10 animate-spin" size={20} />
@@ -104,17 +108,12 @@ export default function ProfilePage() {
     )
   }
 
-  if (!session) {
-    router.push("/signin")
-    return null
-  }
-
   if (!profile) {
     return (
       <div className="flex flex-col items-center gap-y-8 py-48">
-        <p className="text-gray-11 text-16">Failed to load profile.</p>
-        <Button onClick={() => fetchProfile()} size={36} variant="ghost">
-          Try again
+        <p className="text-gray-11 text-16">User not found.</p>
+        <Button onClick={() => router.push("/")} size={36} variant="ghost">
+          Back to discover
         </Button>
       </div>
     )
@@ -138,7 +137,7 @@ export default function ProfilePage() {
 
         <Spacer className="h-8" />
 
-        {isEditing ? (
+        {isOwner && isEditing ? (
           <form className="flex items-center gap-x-8" onSubmit={handleSaveName}>
             <Input
               autoFocus
@@ -177,13 +176,15 @@ export default function ProfilePage() {
             <h1 className="text-24 font-600 text-gray-12">
               {profile.user.name}
             </h1>
-            <button
-              className="text-gray-10 hover:text-gray-12 cursor-pointer transition-colors"
-              onClick={startEditing}
-              type="button"
-            >
-              <LucidePencil size={14} />
-            </button>
+            {isOwner && (
+              <button
+                className="text-gray-10 hover:text-gray-12 cursor-pointer transition-colors"
+                onClick={startEditing}
+                type="button"
+              >
+                <LucidePencil size={14} />
+              </button>
+            )}
           </div>
         )}
 
@@ -227,7 +228,9 @@ export default function ProfilePage() {
       {/* User's questions */}
       <div className="flex items-center gap-x-8">
         <LucideMessageSquare className="text-gray-11" size={16} />
-        <h2 className="text-16 font-600 text-gray-12">Your questions</h2>
+        <h2 className="text-16 font-600 text-gray-12">
+          {isOwner ? "Your questions" : `${profile.user.name}'s questions`}
+        </h2>
       </div>
 
       <Spacer className="h-16" />
@@ -235,15 +238,19 @@ export default function ProfilePage() {
       {profile.questions.length === 0 ? (
         <div className="flex flex-col items-center gap-y-8 py-32">
           <p className="text-gray-11 text-14">
-            You haven't asked any questions yet.
+            {isOwner
+              ? "You haven't asked any questions yet."
+              : "No questions yet."}
           </p>
-          <Button
-            onClick={() => router.push("/create")}
-            size={36}
-            variant="accent"
-          >
-            Ask your first question
-          </Button>
+          {isOwner && (
+            <Button
+              onClick={() => router.push("/create")}
+              size={36}
+              variant="accent"
+            >
+              Ask your first question
+            </Button>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-y-12">

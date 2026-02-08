@@ -8,11 +8,15 @@ import {
   LucideHand,
   LucideLoader,
   LucideMessageSquare,
+  LucidePencil,
   LucideSend,
+  LucideTrash,
   LucideUserCheck,
   LucideUsers,
+  LucideX,
 } from "@nattui/icons"
-import { Button, Spacer } from "@nattui/react-components"
+import { Button, Input, Spacer } from "@nattui/react-components"
+import { categories } from "@/components/carousel-category/categories"
 import { AnswerCard } from "@/components/answer-card"
 import { BountyBadge } from "@/components/bounty-badge"
 import { authClient } from "@/lib/auth-client"
@@ -32,6 +36,15 @@ export default function QuestionDetailPage() {
   const [volunteering, setVolunteering] = useState(false)
   const [selectingId, setSelectingId] = useState<string | null>(null)
   const [error, setError] = useState("")
+
+  // Editing state
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState("")
+  const [editBody, setEditBody] = useState("")
+  const [editCategory, setEditCategory] = useState("")
+  const [editBounty, setEditBounty] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchQuestion = useCallback(async () => {
     try {
@@ -151,6 +164,90 @@ export default function QuestionDetailPage() {
     }
   }
 
+  function startEditing() {
+    if (!question) return
+    setEditTitle(question.title)
+    setEditBody(question.body)
+    setEditCategory(question.category)
+    setEditBounty(String(question.bounty_amount || ""))
+    setError("")
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setIsEditing(false)
+    setError("")
+  }
+
+  async function handleSaveEdit(e: FormEvent) {
+    e.preventDefault()
+    setError("")
+
+    if (!editTitle.trim()) {
+      setError("Title is required")
+      return
+    }
+
+    if (!editBody.trim()) {
+      setError("Details are required")
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      const res = await fetch(`/api/questions/${params.id}`, {
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          body: editBody.trim(),
+          category: editCategory,
+          bountyAmount: Number.parseInt(editBounty) || 0,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || "Failed to update question")
+        return
+      }
+
+      setIsEditing(false)
+      await fetchQuestion()
+    } catch {
+      setError("Something went wrong")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this question? This cannot be undone.")) {
+      return
+    }
+
+    setDeleting(true)
+
+    try {
+      const res = await fetch(`/api/questions/${params.id}`, {
+        method: "DELETE",
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || "Failed to delete question")
+        return
+      }
+
+      router.push("/")
+    } catch {
+      setError("Something went wrong")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-48">
@@ -192,34 +289,153 @@ export default function QuestionDetailPage() {
         Back
       </button>
 
-      {/* Question header */}
-      <div className="flex flex-col gap-y-8">
-        <div className="flex items-start justify-between gap-x-12">
-          <h1 className="text-24 font-600 text-gray-12 leading-snug">
-            {question.title}
-          </h1>
-          <BountyBadge amount={question.bounty_amount} />
-        </div>
+      {/* Question header & body */}
+      {isEditing ? (
+        <form className="flex flex-col" onSubmit={handleSaveEdit}>
+          <label className="text-gray-11 text-13 font-500" htmlFor="edit-title">Title</label>
+          <Spacer className="h-4" />
+          <Input
+            autoFocus
+            id="edit-title"
+            onChange={(e) => setEditTitle(e.target.value)}
+            placeholder="Question title"
+            type="text"
+            value={editTitle}
+          />
 
-        <div className="text-gray-10 flex items-center gap-x-8 text-13">
-          <span className="capitalize">{question.category}</span>
-          <span>·</span>
-          <span>{question.author_name}</span>
-          <span>·</span>
-          <span>{timeAgo(question.created_at)}</span>
-          <span>·</span>
-          <span className={`font-500 ${question.status === "open" ? "text-primary-11" : "text-gray-10"}`}>
-            {question.status === "open" ? "Open" : question.status === "answered" ? "Answered" : "Closed"}
-          </span>
-        </div>
-      </div>
+          <Spacer className="h-12" />
 
-      <Spacer className="h-16" />
+          <label className="text-gray-11 text-13 font-500" htmlFor="edit-body">Details</label>
+          <Spacer className="h-4" />
+          <textarea
+            className="bg-gray-2 border-gray-6 text-gray-12 placeholder:text-gray-10 focus:border-primary-8 min-h-128 w-full rounded-8 border px-12 py-10 text-14 outline-none transition-colors"
+            id="edit-body"
+            onChange={(e) => setEditBody(e.target.value)}
+            placeholder="Question details..."
+            value={editBody}
+          />
 
-      {/* Question body */}
-      <div className="text-gray-12 text-15 whitespace-pre-wrap leading-relaxed">
-        {question.body}
-      </div>
+          <Spacer className="h-12" />
+
+          <label className="text-gray-11 text-13 font-500">Category</label>
+          <Spacer className="h-4" />
+          <div className="flex flex-wrap gap-6">
+            {categories.map((cat) => (
+              <button
+                className={`rounded-8 text-13 font-500 h-28 shrink-0 cursor-pointer px-8 transition-colors ${
+                  editCategory === cat.value
+                    ? "bg-gray-12 text-gray-1"
+                    : "bg-gray-3 text-gray-12 hover:bg-gray-4"
+                }`}
+                key={cat.value}
+                onClick={() => setEditCategory(cat.value)}
+                type="button"
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          <Spacer className="h-12" />
+
+          <label className="text-gray-11 text-13 font-500" htmlFor="edit-bounty">Bounty amount ($)</label>
+          <Spacer className="h-4" />
+          <Input
+            id="edit-bounty"
+            min="0"
+            onChange={(e) => setEditBounty(e.target.value)}
+            placeholder="0"
+            type="number"
+            value={editBounty}
+          />
+
+          {error && (
+            <>
+              <Spacer className="h-8" />
+              <p className="text-red-11 text-14">{error}</p>
+            </>
+          )}
+
+          <Spacer className="h-16" />
+
+          <div className="flex items-center gap-x-8">
+            <Button
+              iconStart={
+                saving ? (
+                  <LucideLoader className="animate-spin" size={16} />
+                ) : (
+                  <LucideCheck size={16} />
+                )
+              }
+              isDisabled={saving}
+              size={36}
+              type="submit"
+              variant="accent"
+            >
+              {saving ? "Saving..." : "Save changes"}
+            </Button>
+            <Button
+              iconStart={<LucideX size={16} />}
+              onClick={cancelEditing}
+              size={36}
+              type="button"
+              variant="ghost"
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <>
+          <div className="flex flex-col gap-y-8">
+            <div className="flex items-start justify-between gap-x-12">
+              <div className="flex items-center gap-x-8">
+                <h1 className="text-24 font-600 text-gray-12 leading-snug">
+                  {question.title}
+                </h1>
+                {isAuthor && (
+                  <div className="flex items-center gap-x-4">
+                    <button
+                      className="text-gray-10 hover:text-gray-12 cursor-pointer transition-colors"
+                      onClick={startEditing}
+                      type="button"
+                    >
+                      <LucidePencil size={14} />
+                    </button>
+                    <button
+                      className="text-gray-10 hover:text-red-11 cursor-pointer transition-colors"
+                      disabled={deleting}
+                      onClick={handleDelete}
+                      type="button"
+                    >
+                      {deleting ? <LucideLoader className="animate-spin" size={14} /> : <LucideTrash size={14} />}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <BountyBadge amount={question.bounty_amount} />
+            </div>
+
+            <div className="text-gray-10 flex items-center gap-x-8 text-13">
+              <span className="capitalize">{question.category}</span>
+              <span>·</span>
+              <span>{question.author_name}</span>
+              <span>·</span>
+              <span>{timeAgo(question.created_at)}</span>
+              <span>·</span>
+              <span className={`font-500 ${question.status === "open" ? "text-primary-11" : "text-gray-10"}`}>
+                {question.status === "open" ? "Open" : question.status === "answered" ? "Answered" : "Closed"}
+              </span>
+            </div>
+          </div>
+
+          <Spacer className="h-16" />
+
+          <div className="text-gray-12 text-15 whitespace-pre-wrap leading-relaxed">
+            {question.body}
+          </div>
+        </>
+      )}
 
       <Spacer className="h-24" />
 

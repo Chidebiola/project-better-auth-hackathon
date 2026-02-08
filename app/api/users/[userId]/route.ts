@@ -1,16 +1,26 @@
-import { auth } from "@/lib/auth"
 import { query } from "@/lib/db"
 
-export async function GET(request: Request) {
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  })
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ userId: string }> },
+) {
+  const { userId } = await params
 
-  if (!session) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  const users = await query<{
+    id: string
+    name: string
+    email: string
+    createdAt: string
+  }>(
+    `SELECT id, name, email, "createdAt" FROM "user" WHERE id = $1`,
+    [userId],
+  )
+
+  if (users.length === 0) {
+    return Response.json({ error: "User not found" }, { status: 404 })
   }
 
-  const userId = session.user.id
+  const user = users[0]
 
   const questions = await query(
     `SELECT
@@ -36,10 +46,10 @@ export async function GET(request: Request) {
 
   return Response.json({
     user: {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-      createdAt: session.user.createdAt,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
     },
     questions,
     stats: {

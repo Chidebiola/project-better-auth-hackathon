@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
 import {
   LucideCheck,
   LucideLoader,
@@ -66,8 +67,9 @@ export default function UsersPage() {
       ) : (
         <div className="flex flex-col gap-y-8">
           {users.map((user) => (
-            <div
+            <Link
               className="border-gray-4 hover:border-gray-6 hover:bg-gray-2 flex items-center gap-x-14 rounded-12 border px-16 py-14 transition-colors"
+              href={`/${user.id}`}
               key={user.id}
             >
               <div className="bg-primary-3 text-primary-11 flex size-40 shrink-0 items-center justify-center rounded-full text-16 font-600">
@@ -101,7 +103,7 @@ export default function UsersPage() {
                   )}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
