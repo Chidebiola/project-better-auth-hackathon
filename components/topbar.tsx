@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { LucideLogIn, LucideLogOut, LucidePlus, LucideUser, LucideUserPlus } from "@nattui/icons"
+import { LucideLogIn, LucideLogOut, LucidePlus, LucideUser, LucideUserPlus, LucideUsers } from "@nattui/icons"
 import { Button } from "@nattui/react-components"
 import { Logomark } from "@/components/logomark"
 import { Logotype } from "@/components/logotype"
@@ -24,6 +24,14 @@ export function Topbar() {
         </Link>
         {!isPending && (
           <div className="flex items-center gap-x-8">
+            <Button
+              iconStart={<LucideUsers size={16} />}
+              onClick={() => router.push("/users")}
+              size={36}
+              variant="ghost"
+            >
+              Users
+            </Button>
             <Button
               iconStart={<LucidePlus size={16} />}
               onClick={() => router.push(session ? "/create" : "/signup")}

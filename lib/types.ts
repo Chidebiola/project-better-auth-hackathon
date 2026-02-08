@@ -23,6 +23,16 @@ export type Answer = {
   updated_at: string
 }
 
+export type AnswerRequest = {
+  id: string
+  question_id: string
+  user_id: string
+  user_name: string
+  status: "pending" | "selected" | "rejected"
+  created_at: string
+}
+
 export type QuestionWithAnswers = Question & {
   answers: Answer[]
+  answer_requests: AnswerRequest[]
 }

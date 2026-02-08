@@ -2,7 +2,16 @@
 
 import { type FormEvent, useCallback, useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { LucideArrowLeft, LucideLoader, LucideMessageSquare, LucideSend } from "@nattui/icons"
+import {
+  LucideArrowLeft,
+  LucideCheck,
+  LucideHand,
+  LucideLoader,
+  LucideMessageSquare,
+  LucideSend,
+  LucideUserCheck,
+  LucideUsers,
+} from "@nattui/icons"
 import { Button, Spacer } from "@nattui/react-components"
 import { AnswerCard } from "@/components/answer-card"
 import { BountyBadge } from "@/components/bounty-badge"
@@ -20,6 +29,8 @@ export default function QuestionDetailPage() {
   const [answerBody, setAnswerBody] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
+  const [volunteering, setVolunteering] = useState(false)
+  const [selectingId, setSelectingId] = useState<string | null>(null)
   const [error, setError] = useState("")
 
   const fetchQuestion = useCallback(async () => {
@@ -41,6 +52,50 @@ export default function QuestionDetailPage() {
   useEffect(() => {
     fetchQuestion()
   }, [fetchQuestion])
+
+  async function handleVolunteer() {
+    setVolunteering(true)
+    setError("")
+
+    try {
+      const res = await fetch(`/api/questions/${params.id}/volunteer`, {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || "Failed to volunteer")
+        return
+      }
+
+      await fetchQuestion()
+    } catch {
+      setError("Something went wrong")
+    } finally {
+      setVolunteering(false)
+    }
+  }
+
+  async function handleSelectUser(userId: string) {
+    setSelectingId(userId)
+
+    try {
+      const res = await fetch(`/api/questions/${params.id}/select`, {
+        body: JSON.stringify({ userId }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+
+      if (res.ok) {
+        await fetchQuestion()
+      }
+    } catch {
+      console.error("Failed to select user")
+    } finally {
+      setSelectingId(null)
+    }
+  }
 
   async function handleSubmitAnswer(e: FormEvent) {
     e.preventDefault()
@@ -116,6 +171,14 @@ export default function QuestionDetailPage() {
   }
 
   const isAuthor = session?.user.id === question.author_id
+  const userRequest = question.answer_requests?.find(
+    (r) => r.user_id === session?.user.id,
+  )
+  const hasVolunteered = !!userRequest
+  const isSelected = userRequest?.status === "selected"
+  const hasAlreadyAnswered = question.answers.some(
+    (a) => a.author_id === session?.user.id,
+  )
 
   return (
     <div className="flex flex-col">
@@ -158,6 +221,114 @@ export default function QuestionDetailPage() {
         {question.body}
       </div>
 
+      <Spacer className="h-24" />
+
+      {/* Volunteer to answer (for non-authors, not yet volunteered) */}
+      {session && !isAuthor && !hasVolunteered && !hasAlreadyAnswered && question.status === "open" && (
+        <div className="border-gray-4 bg-gray-2 flex items-center justify-between rounded-12 border px-16 py-14">
+          <div className="flex flex-col gap-y-2">
+            <p className="text-gray-12 text-14 font-500">Want to help?</p>
+            <p className="text-gray-10 text-13">
+              Volunteer to answer this question. The author will select who gets to respond.
+            </p>
+          </div>
+          <Button
+            iconStart={
+              volunteering ? (
+                <LucideLoader className="animate-spin" size={16} />
+              ) : (
+                <LucideHand size={16} />
+              )
+            }
+            isDisabled={volunteering}
+            onClick={handleVolunteer}
+            size={36}
+            variant="accent"
+          >
+            {volunteering ? "Sending..." : "Try to answer"}
+          </Button>
+        </div>
+      )}
+
+      {/* Volunteered status (for non-authors who already volunteered) */}
+      {session && !isAuthor && hasVolunteered && !isSelected && (
+        <div className="border-gray-6 bg-gray-2 flex items-center gap-x-10 rounded-12 border px-16 py-14">
+          <LucideCheck className="text-gray-10" size={16} />
+          <p className="text-gray-11 text-14">
+            You've volunteered to answer. Waiting for the author to select you.
+          </p>
+        </div>
+      )}
+
+      {/* Selected status (for non-authors who got selected) */}
+      {session && !isAuthor && isSelected && !hasAlreadyAnswered && (
+        <div className="border-primary-6 bg-primary-2 flex items-center gap-x-10 rounded-12 border px-16 py-14">
+          <LucideUserCheck className="text-primary-11" size={16} />
+          <p className="text-primary-11 text-14 font-500">
+            You've been selected to answer! Write your answer below.
+          </p>
+        </div>
+      )}
+
+      {/* Volunteers list (visible to question author) */}
+      {isAuthor && question.answer_requests && question.answer_requests.length > 0 && (
+        <>
+          <Spacer className="h-16" />
+
+          <div className="border-gray-4 rounded-12 border">
+            <div className="flex items-center gap-x-8 px-16 py-12">
+              <LucideUsers className="text-gray-11" size={16} />
+              <h2 className="text-14 font-600 text-gray-12">
+                Volunteers ({question.answer_requests.length})
+              </h2>
+            </div>
+
+            <div className="bg-gray-4 h-px" />
+
+            <div className="flex flex-col">
+              {question.answer_requests.map((req) => (
+                <div
+                  className="flex items-center justify-between px-16 py-10"
+                  key={req.id}
+                >
+                  <div className="flex items-center gap-x-8">
+                    <div className="bg-gray-4 text-gray-12 flex size-28 items-center justify-center rounded-full text-12 font-600">
+                      {req.user_name?.charAt(0).toUpperCase() ?? "?"}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-12 text-14 font-500">
+                        {req.user_name}
+                      </span>
+                      <span className="text-gray-10 text-12">
+                        {timeAgo(req.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    iconStart={
+                      selectingId === req.user_id ? (
+                        <LucideLoader className="animate-spin" size={14} />
+                      ) : req.status === "selected" ? (
+                        <LucideUserCheck size={14} />
+                      ) : (
+                        <LucideCheck size={14} />
+                      )
+                    }
+                    isDisabled={selectingId === req.user_id}
+                    onClick={() => handleSelectUser(req.user_id)}
+                    size={32}
+                    variant={req.status === "selected" ? "accent" : "ghost"}
+                  >
+                    {req.status === "selected" ? "Selected" : "Select"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
       <Spacer className="h-32" />
 
       {/* Divider */}
@@ -176,7 +347,7 @@ export default function QuestionDetailPage() {
       <Spacer className="h-16" />
 
       {question.answers.length === 0 ? (
-        <p className="text-gray-10 py-16 text-14">No answers yet. Be the first to help!</p>
+        <p className="text-gray-10 py-16 text-14">No answers yet.</p>
       ) : (
         <div className="flex flex-col gap-y-12">
           {question.answers.map((answer) => (
@@ -194,46 +365,47 @@ export default function QuestionDetailPage() {
 
       <Spacer className="h-32" />
 
-      {/* Answer form */}
-      {session ? (
-        question.status !== "closed" && (
-          <form className="flex flex-col" onSubmit={handleSubmitAnswer}>
-            <div className="bg-gray-4 h-1" />
-            <Spacer className="h-24" />
+      {/* Answer form - only for selected users */}
+      {session && isSelected && !hasAlreadyAnswered && question.status !== "closed" && (
+        <form className="flex flex-col" onSubmit={handleSubmitAnswer}>
+          <div className="bg-gray-4 h-1" />
+          <Spacer className="h-24" />
 
-            <h3 className="text-16 font-600 text-gray-12">Your answer</h3>
-            <Spacer className="h-8" />
+          <h3 className="text-16 font-600 text-gray-12">Your answer</h3>
+          <Spacer className="h-8" />
 
-            {error && (
-              <>
-                <p className="text-red-11 text-14">{error}</p>
-                <Spacer className="h-8" />
-              </>
-            )}
+          {error && (
+            <>
+              <p className="text-red-11 text-14">{error}</p>
+              <Spacer className="h-8" />
+            </>
+          )}
 
-            <textarea
-              className="bg-gray-2 border-gray-6 text-gray-12 placeholder:text-gray-10 focus:border-primary-8 min-h-128 w-full rounded-8 border px-12 py-10 text-14 outline-none transition-colors"
-              onChange={(e) => setAnswerBody(e.target.value)}
-              placeholder="Write your answer..."
-              value={answerBody}
-            />
+          <textarea
+            className="bg-gray-2 border-gray-6 text-gray-12 placeholder:text-gray-10 focus:border-primary-8 min-h-128 w-full rounded-8 border px-12 py-10 text-14 outline-none transition-colors"
+            onChange={(e) => setAnswerBody(e.target.value)}
+            placeholder="Write your answer..."
+            value={answerBody}
+          />
 
-            <Spacer className="h-12" />
+          <Spacer className="h-12" />
 
-            <div className="flex justify-end">
-              <Button
-                iconStart={submitting ? <LucideLoader className="animate-spin" size={16} /> : <LucideSend size={16} />}
-                isDisabled={submitting}
-                size={36}
-                type="submit"
-                variant="accent"
-              >
-                {submitting ? "Submitting..." : "Submit answer"}
-              </Button>
-            </div>
-          </form>
-        )
-      ) : (
+          <div className="flex justify-end">
+            <Button
+              iconStart={submitting ? <LucideLoader className="animate-spin" size={16} /> : <LucideSend size={16} />}
+              isDisabled={submitting}
+              size={36}
+              type="submit"
+              variant="accent"
+            >
+              {submitting ? "Submitting..." : "Submit answer"}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* Sign in prompt */}
+      {!session && (
         <div className="text-gray-11 py-16 text-center text-14">
           <button
             className="text-primary-11 hover:text-primary-12 cursor-pointer transition-colors"
@@ -244,6 +416,11 @@ export default function QuestionDetailPage() {
           </button>
           {" "}to answer this question.
         </div>
+      )}
+
+      {/* Error display for volunteer action */}
+      {error && !isSelected && (
+        <p className="text-red-11 mt-8 text-14">{error}</p>
       )}
     </div>
   )
