@@ -18,6 +18,7 @@ export type Answer = {
   author_id: string
   author_name: string
   body: string
+  images: string[]
   is_accepted: boolean
   created_at: string
   updated_at: string

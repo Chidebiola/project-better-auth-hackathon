@@ -6,6 +6,7 @@ import {
   LucideArrowLeft,
   LucideCheck,
   LucideHand,
+  LucideImage,
   LucideLoader,
   LucideMessageSquare,
   LucidePencil,
@@ -31,6 +32,8 @@ export default function QuestionDetailPage() {
   const [question, setQuestion] = useState<QuestionWithAnswers | null>(null)
   const [loading, setLoading] = useState(true)
   const [answerBody, setAnswerBody] = useState("")
+  const [answerImages, setAnswerImages] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
   const [volunteering, setVolunteering] = useState(false)
@@ -123,7 +126,7 @@ export default function QuestionDetailPage() {
 
     try {
       const res = await fetch(`/api/questions/${params.id}/answers`, {
-        body: JSON.stringify({ body: answerBody.trim() }),
+        body: JSON.stringify({ body: answerBody.trim(), images: answerImages }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       })
@@ -136,12 +139,51 @@ export default function QuestionDetailPage() {
       }
 
       setAnswerBody("")
+      setAnswerImages([])
       await fetchQuestion()
     } catch {
       setError("Something went wrong")
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploading(true)
+    setError("")
+
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData()
+        formData.append("file", file)
+
+        const res = await fetch("/api/upload", {
+          body: formData,
+          method: "POST",
+        })
+
+        if (!res.ok) {
+          const data = await res.json()
+          setError(data.error || "Failed to upload image")
+          break
+        }
+
+        const data = await res.json()
+        setAnswerImages((prev) => [...prev, data.url])
+      }
+    } catch {
+      setError("Failed to upload image")
+    } finally {
+      setUploading(false)
+      e.target.value = ""
+    }
+  }
+
+  function removeImage(index: number) {
+    setAnswerImages((prev) => prev.filter((_, i) => i !== index))
   }
 
   async function handleAcceptAnswer(answerId: string) {
@@ -604,12 +646,56 @@ export default function QuestionDetailPage() {
             value={answerBody}
           />
 
+          {/* Image previews */}
+          {answerImages.length > 0 && (
+            <>
+              <Spacer className="h-8" />
+              <div className="flex flex-wrap gap-8">
+                {answerImages.map((url, index) => (
+                  <div className="group relative" key={url}>
+                    <img
+                      alt={`Upload ${index + 1}`}
+                      className="border-gray-4 size-80 rounded-8 border object-cover"
+                      src={url}
+                    />
+                    <button
+                      className="bg-gray-12 text-gray-1 absolute -top-6 -right-6 flex size-20 cursor-pointer items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={() => removeImage(index)}
+                      type="button"
+                    >
+                      <LucideX size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           <Spacer className="h-12" />
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <label className="flex cursor-pointer items-center">
+              <input
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                disabled={uploading}
+                multiple
+                onChange={handleImageUpload}
+                type="file"
+              />
+              <span className="text-gray-10 hover:text-gray-12 flex items-center gap-x-6 text-13 transition-colors">
+                {uploading ? (
+                  <LucideLoader className="animate-spin" size={16} />
+                ) : (
+                  <LucideImage size={16} />
+                )}
+                {uploading ? "Uploading..." : "Add images"}
+              </span>
+            </label>
+
             <Button
               iconStart={submitting ? <LucideLoader className="animate-spin" size={16} /> : <LucideSend size={16} />}
-              isDisabled={submitting}
+              isDisabled={submitting || uploading}
               size={36}
               type="submit"
               variant="accent"

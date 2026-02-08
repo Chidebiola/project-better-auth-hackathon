@@ -36,6 +36,25 @@ export function AnswerCard(props: AnswerCardProps) {
         {answer.body}
       </p>
 
+      {answer.images && answer.images.length > 0 && (
+        <div className="flex flex-wrap gap-8">
+          {answer.images.map((url, index) => (
+            <a
+              href={url}
+              key={url}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <img
+                alt={`Image ${index + 1}`}
+                className="border-gray-4 hover:border-gray-6 max-h-200 rounded-8 border object-cover transition-colors"
+                src={url}
+              />
+            </a>
+          ))}
+        </div>
+      )}
+
       {isQuestionAuthor && !answer.is_accepted && questionStatus === "open" && onAccept && (
         <div className="flex justify-end">
           <Button
