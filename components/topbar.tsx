@@ -44,11 +44,11 @@ export function Topbar() {
               <>
                 <Button
                   iconStart={<LucideUser size={16} />}
-                  onClick={() => router.push("/profile")}
+                  onClick={() => router.push(`/${session.user.id}`)}
                   size={36}
                   variant="ghost"
                 >
-                  {session.user.name}
+                  Profile
                 </Button>
                 <Button
                   iconStart={<LucideLogOut size={16} />}
