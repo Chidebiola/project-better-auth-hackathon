@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { LucideMessageSquare } from "@nattui/icons"
+import { LucideCheck, LucideMessageSquare } from "@nattui/icons"
 import { BountyBadge } from "@/components/bounty-badge"
 import type { Question } from "@/lib/types"
 import { timeAgo } from "@/lib/utils"
@@ -11,9 +11,17 @@ export function QuestionCard({ question }: { question: Question }) {
       href={`/question/${question.id}`}
     >
       <div className="flex items-start justify-between gap-x-12">
-        <h3 className="text-gray-12 text-16 font-600 leading-snug">
-          {question.title}
-        </h3>
+        <div className="flex items-center gap-x-8">
+          <h3 className="text-gray-12 text-16 font-600 leading-snug">
+            {question.title}
+          </h3>
+          {question.status === "answered" && (
+            <span className="text-primary-11 bg-primary-3 flex shrink-0 items-center gap-x-4 rounded-6 px-6 py-2 text-11 font-600">
+              <LucideCheck size={10} />
+              Answered
+            </span>
+          )}
+        </div>
         <BountyBadge amount={question.bounty_amount} />
       </div>
 
