@@ -2,17 +2,28 @@
 
 import { type FormEvent, useCallback, useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import {
   LucideCheck,
   LucideLoader,
   LucideMessageSquare,
   LucidePencil,
+  LucideUserCircle,
   LucideX,
 } from "@nattui/icons"
 import { Button, Input, Spacer } from "@nattui/react-components"
 import { QuestionCard } from "@/components/question-card"
 import { authClient } from "@/lib/auth-client"
 import type { Question } from "@/lib/types"
+
+type ResearcherProfile = {
+  id: string
+  affiliation: string
+  emailForVerification: string
+  areasOfInterest: string[]
+  homepage: string
+  alternativeNames: string[]
+}
 
 type ProfileData = {
   user: {
@@ -35,6 +46,7 @@ export default function UserProfilePage() {
   const { data: session } = authClient.useSession()
 
   const [profile, setProfile] = useState<ProfileData | null>(null)
+  const [researcherProfile, setResearcherProfile] = useState<ResearcherProfile | null | "none">(null)
   const [loading, setLoading] = useState(true)
 
   const [isEditing, setIsEditing] = useState(false)
@@ -46,13 +58,27 @@ export default function UserProfilePage() {
 
   const fetchProfile = useCallback(async () => {
     try {
+      // Fetch main profile data
       const res = await fetch(`/api/users/${params.userId}`)
       if (!res.ok) {
         setProfile(null)
-        return
+      } else {
+        const data = await res.json()
+        setProfile(data)
       }
-      const data = await res.json()
-      setProfile(data)
+
+      // Also fetch researcher profile, if endpoint exists
+      try {
+        const researcherRes = await fetch(`/api/profile/researcher?userId=${params.userId}`)
+        if (researcherRes.ok) {
+          const researcherData = await researcherRes.json()
+          setResearcherProfile(researcherData.profile ? researcherData.profile : "none")
+        } else {
+          setResearcherProfile("none")
+        }
+      } catch {
+        setResearcherProfile("none")
+      }
     } catch {
       console.error("Failed to fetch profile")
     } finally {
@@ -216,6 +242,73 @@ export default function UserProfilePage() {
           </span>
           <span className="text-gray-10 text-13">Accepted</span>
         </div>
+      </div>
+
+      <Spacer className="h-32" />
+
+      {/* Researcher profile */}
+      <div className="border-gray-4 flex flex-col gap-y-12 rounded-12 border px-16 py-14">
+        <div className="flex items-center justify-between gap-x-8">
+          <div className="flex items-center gap-x-8">
+            <LucideUserCircle className="text-gray-11" size={18} />
+            <h2 className="text-16 font-600 text-gray-12">Researcher profile</h2>
+          </div>
+          {(researcherProfile === null || researcherProfile === "none") ? (
+            <Button
+              onClick={() => router.push("/profile/researcher")}
+              size={36}
+              variant="accent"
+            >
+              Complete researcher profile
+            </Button>
+          ) : (
+            <Link
+              className="text-primary-11 hover:text-primary-12 text-14 font-500"
+              href="/profile/researcher"
+            >
+              Edit
+            </Link>
+          )}
+        </div>
+        {researcherProfile && researcherProfile !== "none" ? (
+          <div className="text-gray-11 flex flex-col gap-y-6 text-14">
+            {researcherProfile.affiliation && (
+              <p>
+                <span className="text-gray-10 font-500">Affiliation:</span>{" "}
+                {researcherProfile.affiliation}
+              </p>
+            )}
+            {researcherProfile.areasOfInterest?.length > 0 && (
+              <p>
+                <span className="text-gray-10 font-500">Areas of interest:</span>{" "}
+                {researcherProfile.areasOfInterest.join(", ")}
+              </p>
+            )}
+            {researcherProfile.homepage && (
+              <p>
+                <span className="text-gray-10 font-500">Homepage:</span>{" "}
+                <a
+                  className="text-primary-11 hover:underline"
+                  href={researcherProfile.homepage}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {researcherProfile.homepage}
+                </a>
+              </p>
+            )}
+            {!researcherProfile.affiliation &&
+              !researcherProfile.areasOfInterest?.length &&
+              !researcherProfile.homepage && (
+                <p className="text-gray-10">Add affiliation and interests.</p>
+              )}
+          </div>
+        ) : (
+          <p className="text-gray-10 text-14">
+            Verify your identity and add affiliation, areas of interest, and optional homepage so
+            the community can connect with your work.
+          </p>
+        )}
       </div>
 
       <Spacer className="h-32" />
