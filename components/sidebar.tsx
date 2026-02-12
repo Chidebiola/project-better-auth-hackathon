@@ -9,17 +9,17 @@ const links: {
   icon: typeof LucideCompass
   label: string
 }[] = [
-    {
-      href: "/",
-      icon: LucideCompass,
-      label: "Discover",
-    },
-    {
-      href: "/create",
-      icon: LucidePlus,
-      label: "Ask question",
-    },
-  ]
+  {
+    href: "/",
+    icon: LucideCompass,
+    label: "Discover",
+  },
+  {
+    href: "/create",
+    icon: LucidePlus,
+    label: "Create",
+  },
+]
 
 export function Sidebar() {
   const pathname = usePathname()

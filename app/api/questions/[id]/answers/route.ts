@@ -34,11 +34,23 @@ export async function POST(
     return Response.json({ error: "Question is closed" }, { status: 400 })
   }
 
+  // Check if user has been selected to answer
+  const selectedRequests = await query<{ id: string }>(
+    "SELECT id FROM answer_requests WHERE question_id = $1 AND user_id = $2 AND status = 'selected'",
+    [id, session.user.id],
+  )
+
+  if (selectedRequests.length === 0) {
+    return Response.json({ error: "You must be selected by the question author to answer" }, { status: 403 })
+  }
+
+  const images = Array.isArray(body.images) ? body.images : []
+
   const answers = await query(
-    `INSERT INTO answers (question_id, author_id, body)
-     VALUES ($1, $2, $3)
+    `INSERT INTO answers (question_id, author_id, body, images)
+     VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [id, session.user.id, body.body],
+    [id, session.user.id, body.body, images],
   )
 
   return Response.json(answers[0], { status: 201 })
